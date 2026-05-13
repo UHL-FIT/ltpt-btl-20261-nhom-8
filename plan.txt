@@ -1,0 +1,167 @@
+2. YÊU CẦU ỨNG DỤNG NÂNG CAO (≤ 10 điểm)
+2.1. Giao diện người dùng (GUI)
+Ứng dụng được thiết kế với nhiều hơn 3 cửa sổ (windows), bố trí hợp lý, thân thiện với người dùng và có tính trực quan cao.
+🔹 Trang chủ (Dashboard)
+Khi khởi động ứng dụng, hệ thống hiển thị trang chủ thay vì bảng dữ liệu, giúp người dùng dễ dàng lựa chọn chức năng.
+Trang chủ bao gồm các mục:
+	📊 Quản lý bảng điểm 
+	🧑‍🎓 Quản lý sinh viên 
+	📚 Quản lý học phần 
+	📈 Thống kê & biểu đồ 
+	ℹ️ About (hiển thị phiên bản, tác giả, ngày phát hành) 
+________________________________________
+🔹 Cửa sổ chính (Main Window)
+Hiển thị dữ liệu dưới dạng bảng và cung cấp các chức năng chính:
+Chức năng:
+	Thêm 
+	Sửa 
+	Xóa 
+	Import CSV 
+	Export CSV 
+	Mở file PDF hướng dẫn sử dụng 
+Thành phần hiển thị:
+	Bảng dữ liệu (Table) 
+	Thanh tìm kiếm 
+	Các nhãn thống kê: 
+	Điểm trung bình (GPA) 
+	Số lượng sinh viên 
+	Thống kê giới tính 
+	Các thông tin liên quan khác 
+________________________________________
+🔹 Cửa sổ phụ (Sub Windows)
+Ứng dụng bao gồm các cửa sổ chức năng riêng biệt:
+	Cửa sổ Thêm dữ liệu 
+	Cửa sổ Sửa dữ liệu 
+	Cửa sổ Nhập điểm 
+	(Tùy chọn) Cửa sổ Quản lý học phần 
+	Cửa sổ Thống kê & biểu đồ 
+________________________________________
+2.2. Kiến trúc hệ thống (MVC)
+Ứng dụng được xây dựng theo mô hình Model – View – Controller nhằm đảm bảo tính rõ ràng và dễ mở rộng.
+🔹 Model
+	Sử dụng SQLite hoặc hệ quản trị cơ sở dữ liệu (Database) 
+	Lưu trữ dữ liệu theo cấu trúc bảng (SinhVien, MonHoc, BangDiem) 
+	Sử dụng: 
+	Pandas để xử lý dữ liệu 
+	NumPy để tính toán thống kê (GPA, trung bình, ...) 
+________________________________________
+🔹 View
+	Sử dụng: 
+	Tkinter / CustomTkinter / PyQt / PySide 
+	Các thành phần giao diện: 
+	Button 
+	Text input 
+	Label 
+	Table 
+	Toolbar (nâng cao) 
+	Hỗ trợ: 
+	Tùy chỉnh màu sắc 
+	Thêm icon cho button 
+	Bố cục trực quan, dễ sử dụng 
+________________________________________
+🔹 Controller
+	Xử lý logic nghiệp vụ bằng Python 
+	Điều phối dữ liệu giữa Model và View 
+	Có thể mở rộng: 
+	Gọi API (REST API), ví dụ: 
+	Thời tiết 
+	Tỷ giá 
+	Vẽ biểu đồ bằng Matplotlib 
+________________________________________
+2.3. Yêu cầu phi chức năng
+🔹 Kiểm tra dữ liệu (Validation)
+	Không được để trống dữ liệu
+→ Hiển thị thông báo: “Vui lòng nhập dữ liệu” (hoặc hiển thị rõ nếu dữ liệu nào thiếu chỉ định rõ )
+	Sai kiểu dữ liệu
+→ Hiển thị thông báo: “Vui lòng nhập đúng định dạng” 
+	Thao tác không hợp lệ
+→ Ví dụ: chọn nhiều dòng khi sửa
+→ Hiển thị cảnh báo phù hợp 
+________________________________________
+🔹 Trải nghiệm người dùng (UI/UX)
+	Giao diện được bố trí hợp lý, dễ sử dụng 
+	Hỗ trợ: 
+	Tự động co giãn (resize) 
+	Căn chỉnh layout (align) khi thay đổi kích thước cửa sổ 
+________________________________________
+🔹 Hiệu năng và xử lý tác vụ (Performance)
+	Đối với các tác vụ xử lý lâu (> 3 giây), hệ thống cần: 
+	Hiển thị màn hình chờ (Loading) 
+	Sử dụng xử lý bất đồng bộ (Async / Thread) 
+Mục tiêu:
+	Tránh tình trạng treo giao diện (GUI) 
+	Nâng cao trải nghiệm người dùng 
+ 
+ 
+2. Chuẩn hóa dữ liệu đầu vào
+2.1. Thông tin sinh viên (bắt buộc)
+Dữ liệu sinh viên được thiết kế cố định với các trường sau:
+	Mã sinh viên (MaSV) – duy nhất 
+	Họ tên (HoTen) 
+	Giới tính (GioiTinh) 
+	Ngày sinh (NgaySinh) 
+	Lớp (Lop) 
+🔹 (1) Ràng buộc dữ liệu (QUAN TRỌNG)
+	MaSV → khóa chính 
+	MaHocPhan → khóa chính 
+	BangDiem: 
+	khóa ngoại: 
+	MaSV → SinhVien 
+	MaHocPhan → MonHoc
+________________________________________
+2.2. Học phần và điểm
+Hệ thống sử dụng danh sách học phần cố định, được lấy từ thời khóa biểu thực tế của sinh viên.
+Mỗi học phần bao gồm:
+	Tên học phần 
+	Số tín chỉ (cố định từ 1 đến 4) 
+	Điểm (thang điểm từ 0 đến 10) 
+Người dùng không được tự ý thêm học phần mới, chỉ được chọn từ danh sách có sẵn.
+________________________________________
+2.3. GPA
+GPA không được nhập thủ công, mà được tính tự động từ điểm và số tín chỉ của các học phần.
+Công thức tính:
+GPA=(∑("Đ" i"ể" m×Tı ˊn ch"ỉ" ))/(∑(Tı ˊn ch"ỉ" ))
+
+Hệ thống sử dụng:
+	Thư viện Pandas để xử lý dữ liệu 
+	Thư viện NumPy để tính toán 
+________________________________________
+2.4. Tín chỉ
+	Số tín chỉ của mỗi học phần được quy định cố định trong bảng học phần 
+	Giá trị nằm trong khoảng: 1 – 4 tín chỉ 
+	Người dùng không được chỉnh sửa tín chỉ 
+________________________________________
+2.5. Học kỳ và năm học
+Mỗi bản ghi điểm phải có đầy đủ:
+	Học kỳ (HocKy): HK1, HK2 
+	Năm học (NamHoc): ví dụ 2024–2025, 2025–2026 
+Dữ liệu này phục vụ:
+	Thống kê theo từng học kỳ 
+	Quản lý kết quả học tập theo thời gian 
+________________________________________
+3. Thiết kế cơ sở dữ liệu
+Hệ thống sử dụng SQLite với 3 bảng chính:
+________________________________________
+3.1. Bảng SinhVien
+MaSV	HoTen	GioiTinh	NgaySinh	Lop
+SV001	Nguyen Van A	Nam	21/08/2005	DH10TT02A
+SV002	Nguyen Van B	Nam	15/09/2006	DH10TT02B
+SV003	Nguyen Van C	Nữ	01/07/2004	DH10TT02E
+________________________________________
+3.2. Bảng MonHoc
+MaHocPhan	TenHocPhan	SoTinChi
+MH001	Toán cao cấp	3
+MH002	Lập trình căn bản	3
+MH003	Cơ sở dữ liệu	3
+MH004	Tiếng Anh 1	2
+(Danh sách này được xây dựng cố định từ chương trình học)
+________________________________________
+3.3. Bảng BangDiem
+MaSV	MaHocPhan	HocKy	NamHoc	Diem
+SV001	MH001	HK1	2024–2025	8.5
+SV001	MH002	HK1	2024–2025	7.5
+________________________________________
+3.4. Quan hệ dữ liệu
+Hệ thống sử dụng mô hình:
+Quan hệ 1 – N (One-to-Many)
+Một sinh viên có thể học nhiều học phần

@@ -1,89 +1,102 @@
 import pandas as pd
-import numpy as np
-import os
+from models.database import get_connection
 
 class StudentModel:
-    """Model for managing student academic data.
-    Data is stored in a CSV file with columns:
-    ['MSSV', 'HoTen', 'GioiTinh', 'Mon1', 'TinChi1', 'Diem1', ..., 'MonN', 'TinChiN', 'DiemN']
-    """
+    """Model xử lý các thao tác với bảng SinhVien"""
+    
+    def __init__(self, score_model=None):
+        self.score_model = score_model
 
-    def __init__(self, csv_path: str = None):
-        # Default CSV path inside the project data folder
-        if csv_path is None:
-            csv_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'students.csv')
-        self.csv_path = os.path.abspath(csv_path)
-        self.df = pd.DataFrame()
-        self.load_data()
+    def get_all_students(self) -> pd.DataFrame:
+        conn = get_connection()
+        query = "SELECT * FROM SinhVien"
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+        return df
 
-    def load_data(self):
-        """Load CSV data into a DataFrame. If file missing, create empty DataFrame with expected columns."""
-        if os.path.exists(self.csv_path):
-            self.df = pd.read_csv(self.csv_path)
+    def _get_first_name(self, full_name):
+        """Tách tên từ họ tên (từ cuối cùng)"""
+        if not isinstance(full_name, str) or not full_name.strip():
+            return ""
+        return full_name.strip().split()[-1].lower()
+
+    def get_all_students_with_gpa(self, search_term="") -> pd.DataFrame:
+        """Lấy danh sách sinh viên kèm GPA, hỗ trợ tìm kiếm và sắp xếp Alphabet"""
+        # 1. Lấy danh sách SV
+        df_students = self.get_all_students()
+        if df_students.empty:
+            return pd.DataFrame(columns=['MaSV', 'HoTen', 'GioiTinh', 'NgaySinh', 'Lop', 'GPA', 'XepLoai'])
+
+        # 2. Lấy danh sách GPA (nếu đã tiêm score_model)
+        if self.score_model:
+            df_gpa = self.score_model.calculate_gpa()
+            if not df_gpa.empty:
+                # Merge SinhVien với GPA qua MaSV
+                df_gpa = df_gpa[['MaSV', 'GPA', 'XepLoai']]
+                df_students = pd.merge(df_students, df_gpa, on='MaSV', how='left')
+                
+        # Fill NaN cho GPA và XepLoai nếu sinh viên chưa có điểm
+        if 'GPA' not in df_students.columns:
+            df_students['GPA'] = 0.0
+            df_students['XepLoai'] = "Chưa có"
         else:
-            # Create an empty DataFrame with generic columns for demonstration
-            self.df = pd.DataFrame(columns=['MSSV', 'HoTen', 'GioiTinh', 'GPA'])
-        # Ensure GPA column exists
-        if 'GPA' not in self.df.columns:
-            self.df['GPA'] = np.nan
+            df_students['GPA'] = df_students['GPA'].fillna(0.0)
+            df_students['XepLoai'] = df_students['XepLoai'].fillna("Chưa có")
 
-    def save_data(self):
-        """Save the current DataFrame to CSV."""
-        os.makedirs(os.path.dirname(self.csv_path), exist_ok=True)
-        self.df.to_csv(self.csv_path, index=False)
+        # 3. Lọc theo search_term
+        if search_term:
+            search_term = search_term.lower()
+            df_students = df_students[
+                df_students['MaSV'].str.lower().str.contains(search_term) |
+                df_students['HoTen'].str.lower().str.contains(search_term)
+            ]
 
-    def add_student(self, student_dict: dict):
-        """Add a new student record. `student_dict` keys must match DataFrame columns."""
-        self.df = pd.concat([self.df, pd.DataFrame([student_dict])], ignore_index=True)
-        self.recalculate_gpa()
-        self.save_data()
+        # 4. Sắp xếp Alphabet theo Tên
+        if not df_students.empty:
+            df_students['Ten'] = df_students['HoTen'].apply(self._get_first_name)
+            df_students = df_students.sort_values(by=['Ten', 'HoTen']).drop(columns=['Ten'])
 
-    def update_student(self, index: int, student_dict: dict):
-        """Update an existing student at DataFrame index."""
-        for key, value in student_dict.items():
-            self.df.at[index, key] = value
-        self.recalculate_gpa()
-        self.save_data()
+        return df_students
 
-    def delete_student(self, index: int):
-        """Delete a student record by index."""
-        self.df = self.df.drop(index).reset_index(drop=True)
-        self.save_data()
+    def add_student(self, ma_sv, ho_ten, gioi_tinh, ngay_sinh, lop) -> bool:
+        conn = get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO SinhVien (MaSV, HoTen, GioiTinh, NgaySinh, Lop) VALUES (?, ?, ?, ?, ?)",
+                (ma_sv, ho_ten, gioi_tinh, ngay_sinh, lop)
+            )
+            conn.commit()
+            return True
+        except Exception as e:
+            return False
+        finally:
+            conn.close()
 
-    def recalculate_gpa(self):
-        """Calculate GPA for each student using vectorized NumPy operations.
-        Expected columns: for each subject there are 'DiemX' and 'TinChiX' columns.
-        GPA = sum(Diem*TinChi) / sum(TinChi).
-        """
-        # Identify score and credit columns by pattern
-        score_cols = [col for col in self.df.columns if col.startswith('Diem')]
-        credit_cols = [col for col in self.df.columns if col.startswith('TinChi')]
-        if not score_cols or not credit_cols:
-            # No detailed scores, cannot compute GPA
-            self.df['GPA'] = np.nan
-            return
-        scores = self.df[score_cols].to_numpy(dtype=float)
-        credits = self.df[credit_cols].to_numpy(dtype=float)
-        weighted = np.nansum(scores * credits, axis=1)
-        total_credits = np.nansum(credits, axis=1)
-        gpa = np.divide(weighted, total_credits, out=np.full_like(weighted, np.nan), where=total_credits != 0)
-        self.df['GPA'] = np.round(gpa, 2)
+    def update_student(self, ma_sv, ho_ten, gioi_tinh, ngay_sinh, lop) -> bool:
+        conn = get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE SinhVien SET HoTen=?, GioiTinh=?, NgaySinh=?, Lop=? WHERE MaSV=?",
+                (ho_ten, gioi_tinh, ngay_sinh, lop, ma_sv)
+            )
+            conn.commit()
+            return True
+        except Exception as e:
+            return False
+        finally:
+            conn.close()
 
-    def classify(self):
-        """Add a 'XepLoai' column based on GPA thresholds.
-        - GPA >= 8.0: 'Giỏi'
-        - 6.5 <= GPA < 8.0: 'Khá'
-        - 5.0 <= GPA < 6.5: 'Trung Bình'
-        - otherwise: 'Yếu'
-        """
-        conditions = [
-            (self.df['GPA'] >= 8.0),
-            (self.df['GPA'] >= 6.5) & (self.df['GPA'] < 8.0),
-            (self.df['GPA'] >= 5.0) & (self.df['GPA'] < 6.5)
-        ]
-        choices = ['Giỏi', 'Khá', 'Trung Bình']
-        self.df['XepLoai'] = np.select(conditions, choices, default='Yếu')
-
-    def top_students(self, n: int = 10):
-        """Return top `n` students sorted by GPA descending."""
-        return self.df.sort_values(by='GPA', ascending=False).head(n)
+    def delete_student(self, ma_sv) -> bool:
+        conn = get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM SinhVien WHERE MaSV=?", (ma_sv,))
+            cursor.execute("DELETE FROM BangDiem WHERE MaSV=?", (ma_sv,))
+            conn.commit()
+            return True
+        except Exception as e:
+            return False
+        finally:
+            conn.close()
