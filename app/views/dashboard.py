@@ -4,9 +4,9 @@ import tkinter as tk
 
 import customtkinter as ctk
 
-from views.about_window import AboutWindow
-from views.manage_window import ManageWindow
-from views.stats_window import StatsWindow
+from app.views.about_window import AboutWindow
+from app.views.manage_window import ManageWindow
+from app.views.stats_window import StatsWindow
 
 
 class Dashboard:
@@ -18,7 +18,7 @@ class Dashboard:
     def setup_ui(self) -> None:
         wrapper = ctk.CTkFrame(self.root, corner_radius=0)
         wrapper.pack(fill=tk.BOTH, expand=True)
-        header = ctk.CTkFrame(wrapper, fg_color="#0f766e", corner_radius=0)
+        header = ctk.CTkFrame(wrapper, fg_color="#283cd3", corner_radius=0)
         header.pack(fill=tk.X)
         ctk.CTkLabel(
             header,

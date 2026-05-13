@@ -7,8 +7,8 @@ from tkinter import messagebox
 
 import customtkinter as ctk
 
-from utils.logger import get_app_root
-from views.ui_helpers import center_window
+from app.utils.database import get_app_root
+from app.views.ui_helpers import center_window
 
 
 class AboutWindow:
@@ -38,7 +38,7 @@ class AboutWindow:
         ctk.CTkButton(wrapper, text="Đóng", fg_color="#64748b", command=self.window.destroy).pack(anchor="e", padx=12, pady=(20, 10))
 
     def open_guide(self) -> None:
-        guide = get_app_root() / "HUONG_DAN.md"
+        guide = get_app_root() / "assets" / "docs" / "HUONG_DAN.md"
         try:
             os.startfile(guide)  # type: ignore[attr-defined]
         except Exception as exc:

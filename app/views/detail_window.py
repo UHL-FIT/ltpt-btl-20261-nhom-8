@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import os
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 
 import customtkinter as ctk
 
-from utils.validation import classify_gpa
-from views.form_windows import ScoreForm
-from views.ui_helpers import center_window, make_tree, replace_tree_rows
+from app.utils.csv_helpers import export_csv, read_csv_required
+from app.utils.validation import classify_gpa
+from app.views.form_windows import ScoreForm
+from app.views.ui_helpers import center_window, make_tree, replace_tree_rows
 
 
 class DetailWindow:
@@ -40,8 +42,7 @@ class DetailWindow:
             ("MaSV", "Mã sinh viên:"),
             ("HoTen", "Tên sinh viên:"),
             ("Lop", "Lớp:"),
-            ("KyNam", "Học kỳ - Năm học:"),
-            ("GPA", "GPA:"),
+            ("GPA", "GPA (Tích lũy):"),
             ("XepLoai", "Xếp loại:"),
         ]
         for row, (key, title) in enumerate(info_rows):
@@ -67,22 +68,20 @@ class DetailWindow:
         ctk.CTkButton(toolbar, text="➕ Thêm môn", command=self.add_score).pack(side=tk.LEFT, padx=4, pady=8)
         ctk.CTkButton(toolbar, text="✏️ Sửa điểm", command=self.edit_score).pack(side=tk.LEFT, padx=4, pady=8)
         ctk.CTkButton(toolbar, text="🗑️ Xóa môn", fg_color="#dc2626", hover_color="#b91c1c", command=self.delete_score).pack(side=tk.LEFT, padx=4, pady=8)
+
         table_frame = ctk.CTkFrame(wrapper)
         table_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
-        self.tree = make_tree(table_frame, self.columns)
+        self.tree = make_tree(table_frame, self.columns, use_checkbox=True)
         self.tree.bind("<Double-1>", lambda _event: self.edit_score())
 
     def load_data(self) -> None:
         student = self.context.sinhvien.get(self.ma_sv) or {}
         rows = self.context.bangdiem.list_records(self.ma_sv, self.hoc_ky, self.nam_hoc)
-        gpa = self.context.bangdiem.calculate_gpa(self.ma_sv, self.hoc_ky, self.nam_hoc)
-        period = "Tất cả học kỳ/năm học"
-        if self.hoc_ky or self.nam_hoc:
-            period = f"{self.hoc_ky or 'Tất cả HK'} - {self.nam_hoc or 'Tất cả năm'}"
+        gpa = self.context.bangdiem.calculate_gpa(self.ma_sv)
+        
         self.info_labels["MaSV"].configure(text=self.ma_sv)
         self.info_labels["HoTen"].configure(text=student.get("HoTen", ""))
         self.info_labels["Lop"].configure(text=student.get("Lop", ""))
-        self.info_labels["KyNam"].configure(text=period)
         self.info_labels["GPA"].configure(text=str(gpa))
         self.info_labels["XepLoai"].configure(text=classify_gpa(gpa))
         replace_tree_rows(self.tree, self.columns, rows)
@@ -94,8 +93,20 @@ class DetailWindow:
         if not selected:
             messagebox.showwarning("Cảnh báo", "Vui lòng chọn một môn.", parent=self.window)
             return None
-        values = self.tree.item(selected[0], "values")
-        return dict(zip(self.columns, values)) | {"MaSV": self.ma_sv}
+        # Lấy giá trị thực tế của các cột (bỏ qua cột "Chọn" nếu có)
+        offset = 1 if "Chọn" in self.tree["columns"] else 0
+        values = self.tree.item(selected[0], "values")[offset:]
+        return dict(zip(self.columns, values))
+
+    def checked_rows(self) -> list[dict]:
+        checked = []
+        if "Chọn" not in self.tree["columns"]:
+            return []
+        for item in self.tree.get_children():
+            if self.tree.set(item, "Chọn") == "☑":
+                values = self.tree.item(item, "values")[1:]
+                checked.append(dict(zip(self.columns, values)))
+        return checked
 
     def add_score(self) -> None:
         ScoreForm(
@@ -113,13 +124,28 @@ class DetailWindow:
     def edit_score(self) -> None:
         row = self.selected_row()
         if row:
-            ScoreForm(self.window, self.context, "edit", row, self.load_data, fixed_student=self.ma_sv)
+            old_key = (self.ma_sv, row["MaHocPhan"])
+            ScoreForm(self.window, self.context, "edit", row, self.load_data, fixed_student=self.ma_sv, old_key=old_key)
 
     def delete_score(self) -> None:
-        row = self.selected_row()
-        if not row or not messagebox.askyesno("Xác nhận", "Xóa điểm môn đã chọn?", parent=self.window):
+        checked = self.checked_rows()
+        if not checked:
+            row = self.selected_row()
+            if row:
+                checked = [row]
+            else:
+                return
+
+        if not messagebox.askyesno("Xác nhận", f"Bạn có chắc muốn xóa {len(checked)} bản ghi đã chọn?", parent=self.window):
             return
-        ok = self.context.bangdiem.delete(self.ma_sv, row["MaHocPhan"], row["HocKy"], row["NamHoc"])
-        if not ok:
-            messagebox.showerror("Lỗi", "Không thể xóa điểm.", parent=self.window)
+
+        count = 0
+        for row in checked:
+            if self.context.bangdiem.delete(self.ma_sv, row["MaHocPhan"]):
+                count += 1
+
+        if count < len(checked):
+            messagebox.showwarning("Kết quả", f"Chỉ xóa được {count}/{len(checked)} bản ghi.", parent=self.window)
+        else:
+            messagebox.showinfo("Thành công", f"Đã xóa {count} bản ghi điểm.", parent=self.window)
         self.load_data()

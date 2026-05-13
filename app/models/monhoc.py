@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import sqlite3
 
-from utils.database import Database
-from utils.validation import require_text, validate_credit, validate_semester
+from app.utils.database import Database
+from app.utils.validation import require_text, validate_credit, validate_semester
 
 
 class MonHocModel:
@@ -59,12 +59,27 @@ class MonHocModel:
             (pattern, pattern, pattern),
         )
 
-    def import_rows(self, rows: list[dict]) -> tuple[int, int]:
-        ok = failed = 0
-        for row in rows:
-            hoc_ky = row.get("HocKyMacDinh") or row.get("HocKy") or "HK1"
-            if self.add(row.get("MaHocPhan", ""), row.get("TenHocPhan", ""), row.get("SoTinChi", ""), hoc_ky):
-                ok += 1
-            else:
-                failed += 1
-        return ok, failed
+    def import_rows(self, rows: list[dict]) -> int:
+        clean_data = []
+        for i, row in enumerate(rows, 1):
+            try:
+                ma_hp = require_text(row.get("MaHocPhan", ""), "mã học phần").upper()
+                ten_hp = require_text(row.get("TenHocPhan", ""), "tên học phần")
+                so_tin_chi = validate_credit(row.get("SoTinChi", ""))
+                hoc_ky = row.get("HocKyMacDinh") or row.get("HocKy") or "HK1"
+                hoc_ky = validate_semester(hoc_ky)
+                clean_data.append((ma_hp, ten_hp, so_tin_chi, hoc_ky))
+            except ValueError as e:
+                raise ValueError(f"Lỗi tại dòng {i}: {str(e)}")
+
+        count = 0
+        for data in clean_data:
+            try:
+                self.db.execute(
+                    "INSERT INTO MonHoc(MaHocPhan, TenHocPhan, SoTinChi, HocKyMacDinh) VALUES (?, ?, ?, ?)",
+                    data,
+                )
+                count += 1
+            except sqlite3.IntegrityError:
+                continue
+        return count

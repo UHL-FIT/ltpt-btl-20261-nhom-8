@@ -1,10 +1,8 @@
 import sys
 
-from controllers.gui_controller import chay_ung_dung
-
+from app.controllers.gui_controller import run_app
 
 __version__ = "1.0.0"
-
 
 reconfigure_stdout = getattr(sys.stdout, "reconfigure", None)
 if callable(reconfigure_stdout):
@@ -12,4 +10,4 @@ if callable(reconfigure_stdout):
 
 
 if __name__ == "__main__":
-    chay_ung_dung()
+    run_app()

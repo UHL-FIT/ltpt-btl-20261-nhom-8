@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import sqlite3
 
-from utils.database import Database
-from utils.validation import require_text
+from app.utils.database import Database
+from app.utils.validation import require_text, validate_birth_date
 
 
 class SinhVienModel:
@@ -16,7 +16,7 @@ class SinhVienModel:
         ma_sv = require_text(ma_sv, "mã sinh viên").upper()
         ho_ten = require_text(ho_ten, "họ tên")
         gioi_tinh = require_text(gioi_tinh, "giới tính")
-        ngay_sinh = require_text(ngay_sinh, "ngày sinh")
+        ngay_sinh = validate_birth_date(ngay_sinh)
         lop = require_text(lop, "lớp")
         try:
             self.db.execute(
@@ -34,7 +34,7 @@ class SinhVienModel:
             (
                 require_text(ho_ten, "họ tên"),
                 require_text(gioi_tinh, "giới tính"),
-                require_text(ngay_sinh, "ngày sinh"),
+                validate_birth_date(ngay_sinh),
                 require_text(lop, "lớp"),
                 ma_sv,
             ),
@@ -62,11 +62,27 @@ class SinhVienModel:
             (pattern, pattern, pattern, pattern),
         )
 
-    def import_rows(self, rows: list[dict]) -> tuple[int, int]:
-        ok = failed = 0
-        for row in rows:
-            if self.add(row.get("MaSV", ""), row.get("HoTen", ""), row.get("GioiTinh", ""), row.get("NgaySinh", ""), row.get("Lop", "")):
-                ok += 1
-            else:
-                failed += 1
-        return ok, failed
+    def import_rows(self, rows: list[dict]) -> int:
+        clean_data = []
+        for i, row in enumerate(rows, 1):
+            try:
+                ma_sv = require_text(row.get("MaSV", ""), "mã sinh viên").upper()
+                ho_ten = require_text(row.get("HoTen", ""), "họ tên")
+                gioi_tinh = require_text(row.get("GioiTinh", ""), "giới tính")
+                ngay_sinh = validate_birth_date(row.get("NgaySinh", ""))
+                lop = require_text(row.get("Lop", ""), "lớp")
+                clean_data.append((ma_sv, ho_ten, gioi_tinh, ngay_sinh, lop))
+            except ValueError as e:
+                raise ValueError(f"Lỗi tại dòng {i}: {str(e)}")
+
+        count = 0
+        for data in clean_data:
+            try:
+                self.db.execute(
+                    "INSERT INTO SinhVien(MaSV, HoTen, GioiTinh, NgaySinh, Lop) VALUES (?, ?, ?, ?, ?)",
+                    data,
+                )
+                count += 1
+            except sqlite3.IntegrityError:
+                continue  # Bỏ qua nếu trùng mã nhưng không dừng cả quá trình nếu đã pass validation
+        return count

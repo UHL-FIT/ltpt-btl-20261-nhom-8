@@ -5,7 +5,7 @@ from tkinter import messagebox
 
 import customtkinter as ctk
 
-from views.ui_helpers import center_window
+from app.views.ui_helpers import center_window
 
 
 class BaseForm:
@@ -18,18 +18,23 @@ class BaseForm:
         self.window.transient(parent)
         self.window.grab_set()
         self.fields: dict[str, tk.StringVar] = {}
+        self.widgets: dict[str, ctk.CTkBaseClass] = {}
 
     def add_entry(self, frame, row: int, label: str, name: str, value: str = "") -> None:
         ctk.CTkLabel(frame, text=label).grid(row=row, column=0, sticky="w", padx=12, pady=8)
         var = tk.StringVar(value=value)
-        ctk.CTkEntry(frame, textvariable=var).grid(row=row, column=1, sticky="ew", padx=12, pady=8)
+        entry = ctk.CTkEntry(frame, textvariable=var)
+        entry.grid(row=row, column=1, sticky="ew", padx=12, pady=8)
         self.fields[name] = var
+        self.widgets[name] = entry
 
     def add_combo(self, frame, row: int, label: str, name: str, values: list[str], value: str = "") -> None:
         ctk.CTkLabel(frame, text=label).grid(row=row, column=0, sticky="w", padx=12, pady=8)
         var = tk.StringVar(value=value or (values[0] if values else ""))
-        ctk.CTkComboBox(frame, values=values, variable=var, state="readonly").grid(row=row, column=1, sticky="ew", padx=12, pady=8)
+        combo = ctk.CTkComboBox(frame, values=values, variable=var, state="readonly")
+        combo.grid(row=row, column=1, sticky="ew", padx=12, pady=8)
         self.fields[name] = var
+        self.widgets[name] = combo
 
     def add_readonly_entry(self, frame, row: int, label: str, name: str, value: str = "") -> None:
         ctk.CTkLabel(frame, text=label).grid(row=row, column=0, sticky="w", padx=12, pady=8)
@@ -37,6 +42,7 @@ class BaseForm:
         entry = ctk.CTkEntry(frame, textvariable=var, state="disabled")
         entry.grid(row=row, column=1, sticky="ew", padx=12, pady=8)
         self.fields[name] = var
+        self.widgets[name] = entry
 
     def values(self) -> dict:
         return {key: var.get().strip() for key, var in self.fields.items()}
@@ -61,7 +67,7 @@ class StudentForm(BaseForm):
         frame.grid_columnconfigure(1, weight=1)
         self.add_entry(frame, 0, "Mã SV", "MaSV", data.get("MaSV", ""))
         self.add_entry(frame, 1, "Họ tên", "HoTen", data.get("HoTen", ""))
-        self.add_combo(frame, 2, "Giới tính", "GioiTinh", ["Nam", "Nữ", "Khác"], data.get("GioiTinh", "Nam"))
+        self.add_combo(frame, 2, "Giới tính", "GioiTinh", ["Nam", "Nữ"], data.get("GioiTinh", "Nam"))
         self.add_entry(frame, 3, "Ngày sinh", "NgaySinh", data.get("NgaySinh", ""))
         self.add_entry(frame, 4, "Lớp", "Lop", data.get("Lop", ""))
         if mode == "edit":
@@ -125,18 +131,14 @@ class ScoreForm(BaseForm):
         default_semester: str = "",
         default_year: str = "",
         fixed_student: str | None = None,
+        old_key: tuple[str, str] | None = None,
     ) -> None:
         super().__init__(parent, "Nhập điểm" if mode == "add" else "Sửa điểm", on_saved)
         self.context = context
         self.mode = mode
         self.data = data or {}
         self.fixed_student = fixed_student
-        self.old_key = (
-            self.data.get("MaSV", ""),
-            self.data.get("MaHocPhan", ""),
-            self.data.get("HocKy", ""),
-            self.data.get("NamHoc", ""),
-        )
+        self.old_key = old_key or (self.data.get("MaSV", ""), self.data.get("MaHocPhan", ""))
         students = [f"{r['MaSV']} - {r['HoTen']}" for r in context.sinhvien.list_all()]
         courses = [f"{r['MaHocPhan']} - {r['TenHocPhan']}" for r in context.monhoc.list_all()]
         frame = ctk.CTkFrame(self.window)
@@ -147,10 +149,12 @@ class ScoreForm(BaseForm):
             self.add_combo(frame, row, "Sinh viên", "MaSV", students, self._pick_label(students, self.data.get("MaSV") or default_student))
             row += 1
         self.add_combo(frame, row, "Học phần", "MaHocPhan", courses, self._pick_label(courses, self.data.get("MaHocPhan")))
+        if self.mode == "edit":
+            self.widgets["MaHocPhan"].configure(state="disabled")
         row += 1
         self.add_readonly_entry(frame, row, "Tín chỉ", "SoTinChi", "")
         row += 1
-        self.add_combo(frame, row, "Học kỳ", "HocKy", ["HK1", "HK2"], self.data.get("HocKy") or default_semester or "HK1")
+        self.add_readonly_entry(frame, row, "Học kỳ", "HocKy", self.data.get("HocKy") or default_semester or "HK1")
         row += 1
         self.add_entry(frame, row, "Năm học", "NamHoc", self.data.get("NamHoc") or default_year or "2024-2025")
         row += 1
@@ -176,15 +180,24 @@ class ScoreForm(BaseForm):
         course = self.context.monhoc.get(self._code(self.fields["MaHocPhan"].get()))
         if course:
             self.fields["SoTinChi"].set(str(course["SoTinChi"]))
+            self.fields["HocKy"].set(course.get("HocKyMacDinh", "HK1"))
 
     def save(self) -> None:
         try:
             v = self.values()
             ma_sv = self.fixed_student or self._code(v["MaSV"])
+            
+            # Validation bổ sung về độ tuổi
+            student = self.context.sinhvien.get(ma_sv)
+            if student:
+                from app.utils.validation import validate_enrollment_age
+                validate_enrollment_age(v["NamHoc"], student["NgaySinh"])
+            
             args = (ma_sv, self._code(v["MaHocPhan"]), v["HocKy"], v["NamHoc"], v["Diem"])
             ok = self.context.bangdiem.add(*args) if self.mode == "add" else self.context.bangdiem.update(self.old_key, *args)
             if not ok:
-                messagebox.showerror("Lỗi", "Bản ghi điểm bị trùng hoặc không tìm thấy dữ liệu liên quan.", parent=self.window)
+                msg = "Sinh viên này đã có điểm cho môn học này rồi.\nVui lòng sử dụng chức năng 'Sửa' nếu bạn muốn thay đổi điểm." if self.mode == "add" else "Không thể cập nhật bản ghi điểm."
+                messagebox.showerror("Lỗi", msg, parent=self.window)
                 return
             self.on_saved()
             self.window.destroy()

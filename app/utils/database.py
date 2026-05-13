@@ -4,10 +4,9 @@ import sqlite3
 from pathlib import Path
 from typing import Iterable
 
-from utils.logger import get_app_root, setup_logger
 
-
-logger = setup_logger("database")
+def get_app_root() -> Path:
+    return Path(__file__).resolve().parents[2]
 
 
 class Database:
@@ -16,7 +15,8 @@ class Database:
             self.db_path = Path(":memory:")
             connect_target = ":memory:"
         else:
-            self.db_path = Path(db_path) if db_path else get_app_root() / "data" / "ketqua_hoc_tap_app.db"
+            # Đường dẫn mặc định là app/data/ketqua_hoc_tap_app.db
+            self.db_path = Path(db_path) if db_path else get_app_root() / "app" / "data" / "ketqua_hoc_tap_app.db"
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
             connect_target = self.db_path
         self.connection = sqlite3.connect(connect_target)
@@ -24,7 +24,6 @@ class Database:
         self.connection.execute("PRAGMA journal_mode = MEMORY")
         self.connection.execute("PRAGMA temp_store = MEMORY")
         self.connection.execute("PRAGMA foreign_keys = ON")
-        logger.info("Connected to %s", self.db_path)
 
     def execute(self, sql: str, params: Iterable = ()) -> sqlite3.Cursor:
         try:
@@ -86,7 +85,7 @@ def initialize_schema(db: Database) -> None:
             HocKy TEXT NOT NULL CHECK (HocKy IN ('HK1', 'HK2')),
             NamHoc TEXT NOT NULL,
             Diem REAL NOT NULL CHECK (Diem BETWEEN 0 AND 10),
-            PRIMARY KEY (MaSV, MaHocPhan, HocKy, NamHoc),
+            PRIMARY KEY (MaSV, MaHocPhan),
             FOREIGN KEY (MaSV) REFERENCES SinhVien(MaSV) ON DELETE CASCADE,
             FOREIGN KEY (MaHocPhan) REFERENCES MonHoc(MaHocPhan) ON DELETE CASCADE
         )
