@@ -1,9 +1,27 @@
+﻿# Python cache
 __pycache__/
-*.pyc
-*.log
-*.spec
-build/
-dist/
+*.py[cod]
+*$py.class
+
+# Virtual environments
 .venv/
-.idea/
+venv/
+env/
+
+# SQLite database/runtime files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Logs
+logs/
+*.log
+
+# IDE / OS files
 .vscode/
+.idea/
+.DS_Store
+Thumbs.db
