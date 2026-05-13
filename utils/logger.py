@@ -1,37 +1,29 @@
 import logging
-import os
 from pathlib import Path
 
-def setup_logger(name: str) -> logging.Logger:
-    """
-    Khởi tạo và cấu hình logger.
-    Ghi log vào file data/app.log và in ra console.
-    """
+
+def get_app_root() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def setup_logger(name: str = "ketqua_hoc_tap") -> logging.Logger:
     logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
+    if logger.handlers:
+        return logger
 
-    if not logger.handlers:
-        # Đảm bảo thư mục data tồn tại
-        log_dir = Path("data")
-        log_dir.mkdir(exist_ok=True)
-        log_file = log_dir / "app.log"
+    log_dir = get_app_root() / "logs"
+    log_dir.mkdir(exist_ok=True)
+    log_file = log_dir / "app.log"
 
-        # Định dạng log
-        formatter = logging.Formatter(
-            "%(asctime)s | %(name)s | %(levelname)s | %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
-        )
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
-        # Ghi ra file
-        file_handler = logging.FileHandler(log_file, encoding="utf-8")
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+    file_handler = logging.FileHandler(log_file, encoding="utf-8")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
-        # In ra console
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
 
     return logger
