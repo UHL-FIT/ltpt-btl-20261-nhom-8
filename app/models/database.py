@@ -494,14 +494,14 @@ class AppDatabase:
         ).fetchall()
 
         if not details:
-            gpa = 0.0
+            cpa = 0.0
             grade = "Chưa có điểm"
         else:
             credits = np.array([float(row[0]) for row in details], dtype=float)
             scores = np.array([float(row[1]) for row in details], dtype=float)
             total_credits = credits.sum()
-            gpa = float(np.dot(credits, scores) / total_credits) if total_credits else 0.0
-            grade = self._grade_from_gpa(gpa)
+            cpa = float(np.dot(credits, scores) / total_credits) if total_credits else 0.0
+            grade = self._grade_from_cpa(cpa)
         conn.execute(
             """
             INSERT INTO scores (student_id, student_name, class_name, score, grade)
@@ -512,15 +512,15 @@ class AppDatabase:
                 score = excluded.score,
                 grade = excluded.grade
             """,
-            (student_id, student_name, class_name, round(gpa, 2), grade),
+            (student_id, student_name, class_name, round(cpa, 2), grade),
         )
 
-    def _grade_from_gpa(self, gpa: float) -> str:
+    def _grade_from_cpa(self, cpa: float) -> str:
         conditions = [
-            gpa >= 9.0,
-            gpa >= 8.0,
-            gpa >= 6.0,
-            gpa >= 5.0,
+            cpa >= 9.0,
+            cpa >= 8.0,
+            cpa >= 6.0,
+            cpa >= 5.0,
         ]
         choices = ["Xuất sắc", "Giỏi", "Khá", "Trung bình"]
         return str(np.select(conditions, choices, default="Yếu"))

@@ -136,6 +136,7 @@ class StudentController:
         }
 
     def _validate_student_csv_row(self, data):
+        """Kiểm tra dữ liệu từ file csv"""
         student_id = data["student_id"].strip()
         student_name = data["student_name"].strip()
         class_name = data["class_name"].strip()
@@ -157,7 +158,7 @@ class StudentController:
             return False, "Email không được để trống."
 
         if not self._is_valid_alnum_with_letter_and_digit(student_id):
-            return False, "Mã sinh viên phải có cả chữ và số, không chứa ký tự đặc biệt."
+            return False, "Mã sinh viên phải có cả chữ và số, không chứa ký tự đặc biệt hoặc khoảng trắng."
         if not self._is_valid_student_name(student_name):
             return False, "Tên sinh viên chỉ được chứa chữ cái và khoảng trắng."
         if not self._is_valid_alnum_with_letter_and_digit(class_name):

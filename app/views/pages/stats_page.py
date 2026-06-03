@@ -72,24 +72,24 @@ class StatsPage(ctk.CTkFrame):
             "#A855F7",
             (10, 10),
         )
-        # Thẻ điểm GPA trung bình
+        # Thẻ điểm CPA trung bình
         # Gọi hàm tạo thẻ và truyền tham số vào hàm tạo thẻ
-        self.avg_gpa_card = self._create_stat_card(
+        self.avg_cpa_card = self._create_stat_card(
             self.cards_frame,
             2,
             "🏆",
-            "GPA trung bình",
+            "CPA trung bình",
             "0.00",
             "#10B981",
             (10, 10),
         )
-        # Thẻ điểm GPA cao nhất
+        # Thẻ điểm CPA cao nhất
         # Gọi hàm tạo thẻ và truyền tham số vào hàm tạo thẻ
-        self.max_gpa_card = self._create_stat_card(
+        self.max_cpa_card = self._create_stat_card(
             self.cards_frame,
             3,
             "⭐",
-            "GPA cao nhất",
+            "CPA cao nhất",
             "0.00",
             "#F59E0B",
             (10, 0),
@@ -97,7 +97,7 @@ class StatsPage(ctk.CTkFrame):
 
     # Hàm tạo vùng nội dung bên dưới khung của 4 thẻ số liệu thống kê
     # vùng nội dung bên dưới gồm 2 vùng, vùng bên trái chứa biểu đồ tròn
-    # vùng bên phải chứa bảng top 10 sinh viên có điểm GPA cao nhất
+    # vùng bên phải chứa bảng top 10 sinh viên có điểm CPA cao nhất
     def _create_content_area(self):
         """Tạo vùng nội dung phía dưới gồm biểu đồ và bảng top 10."""
         self.content_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -116,7 +116,7 @@ class StatsPage(ctk.CTkFrame):
         )
         self.chart_card.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
 
-        # Khung bên phải: bảng top 10 GPA.
+        # Khung bên phải: bảng top 10 CPA.
         self.top10_card = ctk.CTkFrame(
             self.content_frame,
             fg_color="white",
@@ -160,7 +160,7 @@ class StatsPage(ctk.CTkFrame):
         """Tạo phần tiêu đề và vùng hiển thị biểu đồ."""
         title_label = ctk.CTkLabel(
             self.chart_card,
-            text="Phân loại GPA",
+            text="Phân loại CPA",
             font=("Arial", 18, "bold"),
             text_color="#111827",
         )
@@ -173,16 +173,16 @@ class StatsPage(ctk.CTkFrame):
         self.chart_host.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
     def _create_top10_card(self):
-        """Tạo phần tiêu đề và bảng top 10 sinh viên GPA cao nhất."""
+        """Tạo phần tiêu đề và bảng top 10 sinh viên CPA cao nhất."""
         title_label = ctk.CTkLabel(
             self.top10_card,
-            text="Top 10 GPA cao nhất",
+            text="Top 10 CPA cao nhất",
             font=("Arial", 18, "bold"),
             text_color="#111827",
         )
         title_label.pack(anchor="w", padx=18, pady=(16, 6))
 
-        # Tạo khung bảng top 10 sinh viên có GPA cao nhất
+        # Tạo khung bảng top 10 sinh viên có CPA cao nhất
         table_frame = ctk.CTkFrame(
             self.top10_card, 
             fg_color="white", 
@@ -197,7 +197,7 @@ class StatsPage(ctk.CTkFrame):
             "student_id", 
             "student_name", 
             "class_name", 
-            "gpa", 
+            "cpa", 
             "grade"
         )
         self.top10_tree = ttk.Treeview(
@@ -223,7 +223,7 @@ class StatsPage(ctk.CTkFrame):
         self.top10_tree.grid(row=0, column=0, sticky="nsew")
         y_scrollbar.grid(row=0, column=1, sticky="ns")
 
-    # Hàm tạo style cho treeview (table) top 10 sinh viên có GPA cao nhất
+    # Hàm tạo style cho treeview (table) top 10 sinh viên có CPA cao nhất
     def _setup_top10_treeview_style(self):
         """Cấu hình giao diện cho bảng top 10."""
         style = ttk.Style()
@@ -257,21 +257,21 @@ class StatsPage(ctk.CTkFrame):
         self.top10_tree["show"] = "headings"
         self.top10_tree.tag_configure("odd", background="#F8FAFC")
 
-    # Hàm tọa cột cho treeview (bảng) top 10 sinh viên có GPA cao nhất
+    # Hàm tọa cột cho treeview (bảng) top 10 sinh viên có CPA cao nhất
     def _setup_top10_treeview_columns(self):
         """Khai báo tiêu đề và độ rộng cho các cột của bảng top 10."""
         self.top10_tree.heading("stt", text="STT", anchor="center")
         self.top10_tree.heading("student_id", text="Mã SV", anchor="center")
         self.top10_tree.heading("student_name", text="Tên sinh viên", anchor="center")
         self.top10_tree.heading("class_name", text="Lớp", anchor="center")
-        self.top10_tree.heading("gpa", text="GPA", anchor="center")
+        self.top10_tree.heading("cpa", text="CPA", anchor="center")
         self.top10_tree.heading("grade", text="Xếp loại", anchor="center")
 
         self.top10_tree.column("stt", width=60, minwidth=60, anchor="center", stretch=False)
         self.top10_tree.column("student_id", width=100, minwidth=80, anchor="center")
         self.top10_tree.column("student_name", width=190, minwidth=150, anchor="w")
         self.top10_tree.column("class_name", width=90, minwidth=70, anchor="center")
-        self.top10_tree.column("gpa", width=80, minwidth=70, anchor="center")
+        self.top10_tree.column("cpa", width=80, minwidth=70, anchor="center")
         self.top10_tree.column("grade", width=100, minwidth=80, anchor="center")
 
     # Hàm làm mới dữ liệu
@@ -288,12 +288,12 @@ class StatsPage(ctk.CTkFrame):
         )
 
         scored_rows = self._get_scored_rows(scores)
-        gpas = self._get_gpa_array(scored_rows)
+        cpas = self._get_cpa_array(scored_rows)
 
         self.total_students_card["value_label"].configure(text=str(len(students)))
         self.total_courses_card["value_label"].configure(text=str(len(courses)))
-        self.avg_gpa_card["value_label"].configure(text=f"{gpas.mean():.2f}" if gpas.size else "0.00")
-        self.max_gpa_card["value_label"].configure(text=f"{gpas.max():.2f}" if gpas.size else "0.00")
+        self.avg_cpa_card["value_label"].configure(text=f"{cpas.mean():.2f}" if cpas.size else "0.00")
+        self.max_cpa_card["value_label"].configure(text=f"{cpas.max():.2f}" if cpas.size else "0.00")
 
         self._render_chart(scored_rows)
         self._render_top10(scored_rows)
@@ -307,18 +307,18 @@ class StatsPage(ctk.CTkFrame):
                 scored_rows.append(row)
         return scored_rows
 
-    def _get_gpa_array(self, scored_rows):
-        """Chuyển danh sách GPA sang mảng NumPy để tính trung bình và max."""
+    def _get_cpa_array(self, scored_rows):
+        """Chuyển danh sách CPA sang mảng NumPy để tính trung bình và max."""
         if not scored_rows:
             return np.array([], dtype=float)
 
-        gpa_values = []
+        cpa_values = []
         for row in scored_rows:
-            gpa_values.append(float(row[3]))
-        return np.array(gpa_values, dtype=float)
+            cpa_values.append(float(row[3]))
+        return np.array(cpa_values, dtype=float)
 
     def _render_chart(self, scored_rows):
-        """Vẽ lại biểu đồ tròn phân loại GPA."""
+        """Vẽ lại biểu đồ tròn phân loại CPA."""
         if self.chart_canvas is None:
             self.chart_figure = Figure(figsize=(5.4, 4.0), dpi=100)
             self.chart_canvas = FigureCanvasTkAgg(self.chart_figure, master=self.chart_host)
@@ -345,7 +345,7 @@ class StatsPage(ctk.CTkFrame):
         self.chart_canvas.draw()
 
     def _draw_grade_pie_chart(self, axes, scored_rows):
-        """Vẽ pie chart theo nhóm xếp loại GPA."""
+        """Vẽ pie chart theo nhóm xếp loại CPA."""
         grades = []
         for row in scored_rows:
             grades.append(row[4])
@@ -374,7 +374,7 @@ class StatsPage(ctk.CTkFrame):
         axes.axis("equal")
 
     def _render_top10(self, scored_rows):
-        """Làm mới bảng top 10 GPA cao nhất."""
+        """Làm mới bảng top 10 CPA cao nhất."""
         for item in self.top10_tree.get_children():
             self.top10_tree.delete(item)
 

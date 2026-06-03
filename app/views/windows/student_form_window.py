@@ -411,7 +411,8 @@ class StudentFormWindow(ctk.CTkToplevel):
         return value != original_student_id
 
     def _validate_form(self, data: dict[str, str]) -> tuple[bool, str]:
-        """Kiểm tra toàn bộ form và trả về kết quả hợp lệ."""
+        """Kiểm tra dữ liệu đầu vào toàn bộ form và trả về kết quả hợp lệ."""
+        """Kiểm tra dữ liệu từ form nhập thông tin"""
         student_id = data["student_id"].strip()
         student_name = data["student_name"].strip()
         class_name = data["class_name"].strip()
@@ -433,7 +434,7 @@ class StudentFormWindow(ctk.CTkToplevel):
             return False, "Email không được để trống."
 
         if not self._is_valid_alnum_with_letter_and_digit(student_id):
-            return False, "Mã sinh viên phải có cả chữ và số, không chứa ký tự đặc biệt."
+            return False, "Mã sinh viên phải có cả chữ và số, không chứa ký tự đặc biệt hoặc khoảng trắng."
         if self._is_duplicate_student_id(student_id):
             return False, "Mã sinh viên đã tồn tại, vui lòng nhập mã khác."
         if not self._is_valid_student_name(student_name):

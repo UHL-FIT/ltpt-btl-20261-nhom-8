@@ -80,7 +80,7 @@ class DashboardPage(ctk.CTkFrame):
             0,
             "💯",
             "Quản lý bảng điểm",
-            "Nhập điểm, lọc học kỳ, xem chi tiết GPA",
+            "Nhập điểm, lọc học kỳ, xem chi tiết CPA",
             "scores",
         )
         self._create_navigation_card(
@@ -107,7 +107,7 @@ class DashboardPage(ctk.CTkFrame):
             0,
             "📈",
             "Thống kê & biểu đồ",
-            "GPA trung bình, xếp loại, top sinh viên",
+            "CPA trung bình, xếp loại, top sinh viên",
             "stats",
         )
         self._create_navigation_card(
@@ -186,12 +186,12 @@ class DashboardPage(ctk.CTkFrame):
         for col in range(4):
             cards_frame.grid_columnconfigure(col, weight=1, uniform="stat_card")
 
-        students_count, courses_count, best_gpa, avg_gpa = self._get_dashboard_stats()
+        students_count, courses_count, best_cpa, avg_cpa = self._get_dashboard_stats()
 
         self._create_stat_card(cards_frame, 0, 0, "👥", "Sinh viên", str(students_count), "#6366F1")
         self._create_stat_card(cards_frame, 0, 1, "📘", "Học phần", str(courses_count), "#A855F7")
-        self._create_stat_card(cards_frame, 0, 2, "🏆", "GPA Cao Nhất", f"{best_gpa:.2f}", "#10B981")
-        self._create_stat_card(cards_frame, 0, 3, "⭐", "GPA Trung Bình", f"{avg_gpa:.2f}", "#F59E0B")
+        self._create_stat_card(cards_frame, 0, 2, "🏆", "CPA Cao Nhất", f"{best_cpa:.2f}", "#10B981")
+        self._create_stat_card(cards_frame, 0, 3, "⭐", "CPA Trung Bình", f"{avg_cpa:.2f}", "#F59E0B")
 
     def _get_dashboard_stats(self):
         """Lấy các số liệu cần hiển thị trên Dashboard."""
@@ -204,18 +204,18 @@ class DashboardPage(ctk.CTkFrame):
             if score[4] != "Chưa có điểm":
                 scored_rows.append(score)
 
-        best_gpa = 0.0
-        avg_gpa = 0.0
+        best_cpa = 0.0
+        avg_cpa = 0.0
         if scored_rows:
-            total_gpa = 0.0
+            total_cpa = 0.0
             for score in scored_rows:
-                gpa_value = float(score[3])
-                total_gpa += gpa_value
-                if gpa_value > best_gpa:
-                    best_gpa = gpa_value
-            avg_gpa = total_gpa / len(scored_rows)
+                cpa_value = float(score[3])
+                total_cpa += cpa_value
+                if cpa_value > best_cpa:
+                    best_cpa = cpa_value
+            avg_cpa = total_cpa / len(scored_rows)
 
-        return students_count, courses_count, best_gpa, avg_gpa
+        return students_count, courses_count, best_cpa, avg_cpa
 
     def _create_stat_card(self, parent, row, column, icon, title, value, color):
         """Tạo một thẻ thống kê nhỏ."""

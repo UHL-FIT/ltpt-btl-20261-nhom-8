@@ -167,7 +167,7 @@ class ScorePage(ctk.CTkFrame):
         self.score_tree.heading("student_id", text="Mã SV", command=lambda: self.on_heading_click("student_id"))
         self.score_tree.heading("student_name", text="Họ Tên", command=lambda: self.on_heading_click("student_name"))
         self.score_tree.heading("class_name", text="Lớp", command=lambda: self.on_heading_click("class_name"))
-        self.score_tree.heading("score", text="Điểm GPA", command=lambda: self.on_heading_click("score"))
+        self.score_tree.heading("score", text="Điểm CPA", command=lambda: self.on_heading_click("score"))
         self.score_tree.heading("grade", text="Xếp loại", command=lambda: self.on_heading_click("grade"))
 
         self.score_tree.column("stt", width=60, minwidth=60, anchor="center", stretch=False)

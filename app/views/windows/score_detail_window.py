@@ -87,7 +87,7 @@ class ScoreDetailWindow(ctk.CTkToplevel):
         self._create_student_info_block(self.student_frame, 0, "Mã sinh viên")
         self._create_student_info_block(self.student_frame, 1, "Tên sinh viên")
         self._create_student_info_block(self.student_frame, 2, "Lớp")
-        self._create_student_info_block(self.student_frame, 3, "GPA tích lũy")
+        self._create_student_info_block(self.student_frame, 3, "CPA tích lũy")
         self._create_student_info_block(self.student_frame, 4, "Xếp loại")
 
         # Thanh nút chức năng.
@@ -287,19 +287,19 @@ class ScoreDetailWindow(ctk.CTkToplevel):
             None,
         )
         if summary_row:
-            gpa_value = summary_row[3]
+            cpa_value = summary_row[3]
             grade = summary_row[4]
         else:
-            gpa_value = 0.0
+            cpa_value = 0.0
             grade = "Chưa có điểm"
 
         self.info_labels["Mã sinh viên"].configure(text=self.student_info["student_id"])
         self.info_labels["Tên sinh viên"].configure(text=student_name)
         self.info_labels["Lớp"].configure(text=class_name)
         if grade == "Chưa có điểm":
-            self.info_labels["GPA tích lũy"].configure(text="Chưa có điểm")
+            self.info_labels["CPA tích lũy"].configure(text="Chưa có điểm")
         else:
-            self.info_labels["GPA tích lũy"].configure(text=f"{float(gpa_value):.2f}")
+            self.info_labels["CPA tích lũy"].configure(text=f"{float(cpa_value):.2f}")
         self.info_labels["Xếp loại"].configure(text=grade)
 
     def toggle_checkbox(self, event):

@@ -27,7 +27,7 @@ class ScoreController:
                 "Mã sinh viên",
                 "Họ tên",
                 "Lớp",
-                "Điểm GPA",
+                "Điểm CPA",
                 "Xếp loại",
                 "Mã học phần",
                 "Tên học phần",
@@ -38,7 +38,7 @@ class ScoreController:
             ])
 
             for score in scores:
-                student_id, student_name, class_name, gpa, grade = score
+                student_id, student_name, class_name, cpa, grade = score
                 score_details = self.database.fetch_score_details(student_id)
 
                 if not score_details:
@@ -46,7 +46,7 @@ class ScoreController:
                         student_id,
                         student_name,
                         class_name,
-                        gpa,
+                        cpa,
                         grade,
                         "",
                         "",
@@ -64,7 +64,7 @@ class ScoreController:
                         student_id,
                         student_name,
                         class_name,
-                        gpa,
+                        cpa,
                         grade,
                         course_id,
                         course_name,

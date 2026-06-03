@@ -4,7 +4,7 @@
 
 ## Giới Thiệu
 
-Đây là một ứng dụng quản lý sinh viên và học phần, cho phép theo dõi điểm số, tính GPA tự động và thống kê kết quả học tập trực quan.  
+Đây là một ứng dụng quản lý sinh viên và học phần, cho phép theo dõi điểm số, tính CPA tự động và thống kê kết quả học tập trực quan.  
 Chương trình được xây dựng theo hướng dễ đọc, dễ mở rộng và dễ bảo trì.
 
 ## Chức Năng Chính
@@ -13,7 +13,7 @@ Chương trình được xây dựng theo hướng dễ đọc, dễ mở rộng
 - Quản lý học phần.
 - Quản lý bảng điểm.
 - Xem chi tiết điểm của từng sinh viên.
-- Tính GPA và xếp loại tự động.
+- Tính CPA và xếp loại tự động.
 - Thống kê kết quả học tập bằng biểu đồ tròn và bảng top 10.
 - Tìm kiếm, sắp xếp và chọn nhiều dòng bằng checkbox.
 - Thêm, sửa, xóa dữ liệu.
@@ -103,7 +103,7 @@ File PDF hướng dẫn nằm tại:
 
 - Sidebar có thể thu gọn/mở rộng.
 - Dashboard hiển thị thống kê tổng quan.
-- Trang thống kê có biểu đồ tròn và bảng top 10 GPA.
+- Trang thống kê có biểu đồ tròn và bảng top 10 CPA.
 - Trang bảng điểm có thể mở cửa sổ chi tiết cho từng sinh viên.
 - Các form nhập dữ liệu có validation cơ bản để kiểm tra dữ liệu đầu vào.
 - Có nhập/xuất CSV với tiêu đề tiếng Việt.
