@@ -15,6 +15,7 @@ logger = get_logger(__name__)
 
 class AppDatabase:
     def __init__(self, db_path: str | Path | None = None):
+        """Khởi tạo đối tượng quản lý database và chuẩn bị đường dẫn file SQLite."""
         default_path = Path(__file__).parent.parent / "data" / "app_data.db"
         self.db_path = Path(db_path) if db_path is not None else default_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -26,9 +27,12 @@ class AppDatabase:
             raise
 
     def _connect(self) -> sqlite3.Connection:
+        """Mở một kết nối SQLite tới file database hiện tại."""
         return sqlite3.connect(self.db_path)
 
     def _initialize(self) -> None:
+        """Tạo bảng, cập nhật cấu trúc cũ và nạp dữ liệu mẫu ban đầu."""
+        # Gọi hàm để kết nối tới database (sqlite)
         with self._connect() as conn:
             conn.execute("PRAGMA foreign_keys = ON")
             conn.executescript(
@@ -78,14 +82,18 @@ class AppDatabase:
             )
             logger.info("Đã tạo hoặc kiểm tra xong cấu trúc bảng SQLite.")
 
-            self._migrate_courses_table(conn)
+
+            # Nếu không có database thì sẽ tạo lại database nhưng do database mới tạo
+            # chưa có dữ liệu nên gọi hàm _seed_default_data(conn) nếu bảng chưa có dữ liệu
             self._seed_default_data(conn)
+
             self._rebuild_score_summaries(conn)
 
             conn.commit()
             logger.info("Đã khởi tạo database và đồng bộ dữ liệu ban đầu thành công.")
 
     def _seed_default_data(self, conn: sqlite3.Connection) -> None:
+        """Nạp dữ liệu mẫu nếu database còn trống."""
         seeded_row = conn.execute(
             "SELECT value FROM app_meta WHERE key = ?",
             ("seeded",),
@@ -154,32 +162,9 @@ class AppDatabase:
             "INSERT OR REPLACE INTO app_meta (key, value) VALUES (?, ?)",
             ("seeded", "1"),
         )
-    def _migrate_courses_table(self, conn: sqlite3.Connection) -> None:
-        columns = [row[1] for row in conn.execute("PRAGMA table_info(courses)")]
-        if "teacher" not in columns:
-            return
-
-        conn.execute("ALTER TABLE courses RENAME TO courses_old")
-        conn.execute(
-            """
-            CREATE TABLE courses (
-                course_id TEXT PRIMARY KEY,
-                course_name TEXT NOT NULL,
-                credits INTEGER NOT NULL,
-                semester TEXT NOT NULL
-            )
-            """
-        )
-        conn.execute(
-            """
-            INSERT INTO courses (course_id, course_name, credits, semester)
-            SELECT course_id, course_name, credits, semester
-            FROM courses_old
-            """
-        )
-        conn.execute("DROP TABLE courses_old")
 
     def fetch_students(self) -> list[tuple[str, str, str, str, str, str]]:
+        """Lấy danh sách sinh viên từ bảng students."""
         with self._connect() as conn:
             cursor = conn.execute(
                 """
@@ -191,6 +176,7 @@ class AppDatabase:
             return [tuple(row) for row in cursor.fetchall()]
 
     def fetch_courses(self) -> list[tuple[str, str, int, str]]:
+        """Lấy danh sách học phần từ bảng courses."""
         with self._connect() as conn:
             cursor = conn.execute(
                 """
@@ -202,6 +188,7 @@ class AppDatabase:
             return [tuple(row) for row in cursor.fetchall()]
 
     def fetch_course(self, course_id: str) -> tuple[str, str, int, str] | None:
+        """Lấy một học phần theo mã học phần."""
         with self._connect() as conn:
             cursor = conn.execute(
                 """
@@ -215,6 +202,7 @@ class AppDatabase:
             return tuple(row) if row else None
 
     def fetch_scores(self) -> list[tuple[str, str, str, float, str]]:
+        """Lấy bảng điểm tổng hợp theo sinh viên từ bảng scores."""
         with self._connect() as conn:
             cursor = conn.execute(
                 """
@@ -226,6 +214,7 @@ class AppDatabase:
             return [tuple(row) for row in cursor.fetchall()]
 
     def fetch_student(self, student_id: str) -> tuple[str, str, str, str, str, str] | None:
+        """Lấy một sinh viên theo mã sinh viên."""
         with self._connect() as conn:
             cursor = conn.execute(
                 """
@@ -239,6 +228,7 @@ class AppDatabase:
             return tuple(row) if row else None
 
     def fetch_score_details(self, student_id: str) -> list[tuple[int, str, str, int, str, str, float]]:
+        """Lấy danh sách điểm chi tiết của một sinh viên."""
         with self._connect() as conn:
             cursor = conn.execute(
                 """
@@ -252,6 +242,7 @@ class AppDatabase:
             return [tuple(row) for row in cursor.fetchall()]
 
     def fetch_score_detail(self, score_detail_id: int) -> tuple[int, str, str, str, int, str, str, float] | None:
+        """Lấy một bản ghi điểm chi tiết theo ID."""
         with self._connect() as conn:
             cursor = conn.execute(
                 """
@@ -265,6 +256,7 @@ class AppDatabase:
             return tuple(row) if row else None
 
     def delete_student(self, student_id: str) -> None:
+        """Xóa sinh viên và các dữ liệu liên quan."""
         with self._connect() as conn:
             conn.execute("DELETE FROM score_details WHERE student_id = ?", (student_id,))
             conn.execute("DELETE FROM scores WHERE student_id = ?", (student_id,))
@@ -272,6 +264,7 @@ class AppDatabase:
             conn.commit()
 
     def insert_student(self, student_data: dict[str, str]) -> None:
+        """Thêm một sinh viên mới vào bảng students."""
         student_id = student_data["student_id"].upper()
         class_name = student_data["class_name"].upper()
         with self._connect() as conn:
@@ -294,6 +287,7 @@ class AppDatabase:
             conn.commit()
 
     def update_student(self, original_student_id: str, student_data: dict[str, str]) -> None:
+        """Cập nhật thông tin sinh viên và đồng bộ dữ liệu liên quan."""
         student_id = original_student_id.upper()
         class_name = student_data["class_name"].upper()
         with self._connect() as conn:
@@ -339,6 +333,7 @@ class AppDatabase:
             conn.commit()
 
     def delete_course(self, course_id: str) -> None:
+        """Xóa học phần và cập nhật lại các bảng liên quan."""
         with self._connect() as conn:
             student_ids = [
                 row[0]
@@ -354,6 +349,7 @@ class AppDatabase:
             conn.commit()
 
     def insert_course(self, course_data: dict[str, str]) -> None:
+        """Thêm một học phần mới vào bảng courses."""
         with self._connect() as conn:
             conn.execute(
                 """
@@ -371,6 +367,7 @@ class AppDatabase:
             conn.commit()
 
     def update_course(self, original_course_id: str, course_data: dict[str, str]) -> None:
+        """Cập nhật học phần và đồng bộ tên/số tín chỉ trong điểm chi tiết."""
         with self._connect() as conn:
             conn.execute(
                 """
@@ -410,6 +407,7 @@ class AppDatabase:
             conn.commit()
 
     def insert_score_detail(self, detail_data: dict[str, str]) -> None:
+        """Thêm một bản ghi điểm chi tiết cho sinh viên."""
         with self._connect() as conn:
             conn.execute(
                 """
@@ -431,6 +429,7 @@ class AppDatabase:
             conn.commit()
 
     def update_score_detail(self, score_detail_id: int, detail_data: dict[str, str]) -> None:
+        """Cập nhật một bản ghi điểm chi tiết."""
         with self._connect() as conn:
             conn.execute(
                 """
@@ -452,6 +451,7 @@ class AppDatabase:
             conn.commit()
 
     def delete_score_detail(self, score_detail_id: int) -> None:
+        """Xóa một bản ghi điểm chi tiết và tính lại CPA."""
         with self._connect() as conn:
             cursor = conn.execute(
                 "SELECT student_id FROM score_details WHERE score_detail_id = ?",
@@ -465,12 +465,14 @@ class AppDatabase:
             conn.commit()
 
     def _rebuild_score_summaries(self, conn: sqlite3.Connection) -> None:
+        """Tính lại toàn bộ bảng scores từ dữ liệu score_details."""
         conn.execute("DELETE FROM scores")
         student_ids = [row[0] for row in conn.execute("SELECT student_id FROM students ORDER BY student_id")]
         for student_id in student_ids:
             self._rebuild_score_summary(conn, student_id)
 
     def _rebuild_score_summary(self, conn: sqlite3.Connection, student_id: str) -> None:
+        """Tính lại CPA và xếp loại cho một sinh viên."""
         student = conn.execute(
             """
             SELECT student_name, class_name
@@ -500,6 +502,7 @@ class AppDatabase:
             credits = np.array([float(row[0]) for row in details], dtype=float)
             scores = np.array([float(row[1]) for row in details], dtype=float)
             total_credits = credits.sum()
+            # Công thức tính điểm cpa
             cpa = float(np.dot(credits, scores) / total_credits) if total_credits else 0.0
             grade = self._grade_from_cpa(cpa)
         conn.execute(
@@ -516,6 +519,7 @@ class AppDatabase:
         )
 
     def _grade_from_cpa(self, cpa: float) -> str:
+        """Xếp loại học tập dựa trên CPA."""
         conditions = [
             cpa >= 9.0,
             cpa >= 8.0,

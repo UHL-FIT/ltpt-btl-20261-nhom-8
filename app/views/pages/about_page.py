@@ -67,7 +67,7 @@ class AboutPage(ctk.CTkFrame):
             "Phiên bản: 1.0.0\n"
             "Ứng dụng dùng để phục vụ việc quản lý, theo dõi và phân tích\n"
             "tiến độ học tập của sinh viên một cách chuyên nghiệp và hiệu quả.\n"
-            "Sử dụng công nghệ Python, NumPy, Pandas, CustomTkinter, Matplotlib và SQLite."
+            "Sử dụng công nghệ Python, NumPy, CustomTkinter, Matplotlib và SQLite."
         )
         info_label = ctk.CTkLabel(
             parent,

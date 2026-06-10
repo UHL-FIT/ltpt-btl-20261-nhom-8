@@ -35,7 +35,7 @@ class MainWindow(ctk.CTk):
         logger.info("Khởi tạo layout cho MainWindow.")
         self._create_pages()
         logger.info("Khởi tạo trang cho MainWindow.")
-        self.show_page("dashboard")
+        self.show_page("dashboard") #Gọi hàm show_page và truyền name_page là dashboard
         logger.info("Hiển thị trang cho MainWindow.")
         self.after(0, lambda: self.state("zoomed"))
         logger.info("Áp dụng chế độ toàn màn hình cho MainWindow.")
@@ -69,9 +69,8 @@ class MainWindow(ctk.CTk):
         self.pages["dashboard"] = DashboardPage(
             self.content_frame,
             self.database,
-            self.show_page,
+            self.show_page, # truyền hàm show_page để dashboard có thể dùng hàm này
         )
-        logger.info("Khởi tạo trang dashboard từ MainWindow.")
         self.pages["scores"] = ScorePage(
             self.content_frame,
             self.database,
@@ -111,6 +110,8 @@ class MainWindow(ctk.CTk):
     def refresh_score_page(self):
         """Làm mới trang bảng điểm nếu trang này có hỗ trợ refresh."""
         score_page = self.pages.get("scores")
+        # Lấy trang bảng điểm từ dict self.pages bằng key "scores"
+        # Nếu trang tồn tại và có hàm refresh_data thì gọi hàm đó
         if score_page and hasattr(score_page, "refresh_data"):
             score_page.refresh_data()
 

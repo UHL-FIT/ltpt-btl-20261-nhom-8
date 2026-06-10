@@ -463,7 +463,7 @@ class StudentPage(ctk.CTkFrame):
         self._refresh_score_page()
 
     def _get_rows_to_delete(self):
-        """Lấy danh sách dòng cần xóa, ưu tiên các checkbox đã tick."""
+        """Lấy danh sách dòng cần xóa."""
         checked_rows = []
         for row_id in self.student_tree.get_children():
             if self.student_tree.item(row_id, "values")[0] == "☑":

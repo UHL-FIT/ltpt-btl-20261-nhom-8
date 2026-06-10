@@ -69,7 +69,10 @@ class Sidebar(ctk.CTkFrame):
             hover_color="#475569",
             text_color="white",
             anchor="w",
-            command=lambda: self._handle_page_change(page_name),
+            command=lambda: (
+            logger.info("Người dùng chọn trang từ Sidebar: %s", page_name),
+            self.show_page_callback(page_name)
+            )  
         )
         button.pack(padx=20, pady=2, fill="x")
 
@@ -79,9 +82,21 @@ class Sidebar(ctk.CTkFrame):
 
     def set_active_button(self, active_page):
         """Đánh dấu nút của trang hiện tại."""
+        btn_color = "#6366F1"
         for page_name, button in self.buttons.items():
             if page_name == active_page:
-                button.configure(fg_color="#6366F1")
+                if active_page == "dashboard":
+                    button.configure(fg_color=btn_color)
+                elif active_page == "scores":
+                    button.configure(fg_color=btn_color)
+                elif active_page == "students":
+                    button.configure(fg_color=btn_color)
+                elif active_page == "courses":
+                    button.configure(fg_color=btn_color)
+                elif active_page == "stats":
+                    button.configure(fg_color=btn_color)
+                elif active_page == "about":
+                    button.configure(fg_color=btn_color)
             else:
                 button.configure(fg_color="transparent")
         logger.info("Đã đổi trạng thái nút sidebar sang: %s", active_page)
@@ -126,7 +141,4 @@ class Sidebar(ctk.CTkFrame):
 
             logger.info("Sidebar đã mở rộng.")
 
-    def _handle_page_change(self, page_name):
-        """Gọi callback chuyển trang và ghi log."""
-        logger.info("Người dùng chọn trang từ Sidebar: %s", page_name)
-        self.show_page_callback(page_name)
+    

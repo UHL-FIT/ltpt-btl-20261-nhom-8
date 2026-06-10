@@ -13,9 +13,11 @@ logger = get_logger(__name__)
 
 def run_app():
     """Khởi tạo database, controller và cửa sổ chính của ứng dụng."""
+    # Khởi tạo đối quản lý database
     database = AppDatabase()
     logger.info("Đã khởi tạo database dùng chung cho ứng dụng.")
 
+    
     controllers = {
         "student": StudentController(database),
         "course": CourseController(database),

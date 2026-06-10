@@ -257,7 +257,7 @@ class StatsPage(ctk.CTkFrame):
         self.top10_tree["show"] = "headings"
         self.top10_tree.tag_configure("odd", background="#F8FAFC")
 
-    # Hàm tọa cột cho treeview (bảng) top 10 sinh viên có CPA cao nhất
+    # Hàm tạo cột cho treeview (bảng) top 10 sinh viên có CPA cao nhất
     def _setup_top10_treeview_columns(self):
         """Khai báo tiêu đề và độ rộng cho các cột của bảng top 10."""
         self.top10_tree.heading("stt", text="STT", anchor="center")

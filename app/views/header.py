@@ -7,7 +7,6 @@ logger = get_logger(__name__)
 
 
 class Header(ctk.CTkFrame):
-    """Thanh tiêu đề nằm ở phía trên cửa sổ chính."""
 
     def __init__(self, parent, menu_callback=None):
         """Khởi tạo thanh header và gắn callback cho nút menu."""
@@ -43,7 +42,7 @@ class Header(ctk.CTkFrame):
             fg_color="transparent",
             hover_color="#E2E8F0",
             text_color="#111827",
-            command=self._on_menu_click,
+            command=self.menu_callback,
         )
         self.menu_button.pack(side="left", padx=(20, 10))
 
@@ -55,9 +54,3 @@ class Header(ctk.CTkFrame):
             text_color="#111827",
         )
         self.title_label.pack(side="left")
-
-    def _on_menu_click(self):
-        """Xử lý sự kiện bấm nút menu."""
-        logger.info("Người dùng bấm nút menu trên Header.")
-        if self.menu_callback:
-            self.menu_callback()
